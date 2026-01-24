@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>System Dashboard</title>
+    <style>
+        :root {
+            --bg-color: #1a1a1a;
+            --sidebar-bg: #2d2d2d;
+            --text-color: #e0e0e0;
+            --accent-color: #007acc;
+            --danger-color: #ff4444;
+            --success-color: #00C851;
+            --card-bg: #333333;
+        }
+
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        #sidebar {
+            width: 250px;
+            background-color: var(--sidebar-bg);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .nav-item {
+            padding: 15px;
+            cursor: pointer;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            transition: background 0.2s;
+            font-weight: 500;
+        }
+
+        .nav-item:hover, .nav-item.active {
+            background-color: var(--accent-color);
+            color: white;
+        }
+
+        #content {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+        }
+
+        .view-section {
+            display: none;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .view-section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h1 { margin-top: 0; border-bottom: 2px solid var(--accent-color); padding-bottom: 10px; display: inline-block; }
+        
+        .card {
+            background-color: var(--card-bg);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+
+        input[type="text"] {
+            background: #444;
+            border: 1px solid #555;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            width: 200px;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: transform 0.1s;
+        }
+        
+        button:active { transform: scale(0.98); }
+
+        .btn-primary { background-color: var(--accent-color); color: white; }
+        .btn-danger { background-color: var(--danger-color); color: white; }
+        .btn-success { background-color: var(--success-color); color: white; }
+
+        #terminal-output, #log-output {
+            background-color: #000;
+            font-family: 'Consolas', 'Monaco', monospace;
+            padding: 15px;
+            border-radius: 5px;
+            height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            border: 1px solid #444;
+            color: #0f0;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.8em;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        
+        .status-running { background-color: rgba(0, 200, 81, 0.2); color: var(--success-color); border: 1px solid var(--success-color); }
+        .status-stopped { background-color: rgba(255, 68, 68, 0.2); color: var(--danger-color); border: 1px solid var(--danger-color); }
+
+    </style>
+</head>
+<body>
+
+    <div id="sidebar">
+        <h2 style="margin-bottom: 30px;">System Dashboard</h2>
+        <div class="nav-item active" onclick="showSection('gatekeeper')">Gatekeeper</div>
+        <div class="nav-item" onclick="showSection('deepguard')">DeepGuard</div>
+    </div>
+
+    <div id="content">
+        <!-- Gatekeeper View -->
+        <div id="gatekeeper" class="view-section active">
+            <h1>Gatekeeper Rate Limiter</h1>
+            <p>Administer user rate limits and check status.</p>
+            
+            <div class="card">
+                <h3>Rate Limit Check</h3>
+                <input type="text" id="gk-user-input" placeholder="Enter User ID (e.g. alice)">
+                <button class="btn-primary" onclick="checkUser()">Check Request</button>
+                <button class="btn-primary" onclick="checkStatus()">Check Status</button>
+                <button class="btn-danger" onclick="resetUser()">Reset User</button>
+            </div>
+
+            <div class="card">
+                <h3>Live Terminal Output</h3>
+                <div id="terminal-output">Waiting for gatekeeper process...</div>
+            </div>
+        </div>
+
+        <!-- DeepGuard View -->
+        <div id="deepguard" class="view-section">
+            <h1>DeepGuard Monitor</h1>
+            <p>Real-time system health monitoring and encrypted logging.</p>
+
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <strong>Service Status:</strong> 
+                        <span id="dg-status-badge" class="status-badge status-stopped">Stopped</span>
+                    </div>
+                    <div>
+                        <button class="btn-success" onclick="startDeepGuard()">Start Monitoring</button>
+                        <button class="btn-danger" onclick="stopDeepGuard()">Stop</button>
+                    </div>
+                </div>
+                <p id="dg-status-text" style="color: #888; margin-top: 10px;">Service is not running.</p>
+            </div>
+
+            <div class="card">
+                <h3>Decrypted Live Logs</h3>
+                <div id="log-output">Logs will appear here when monitoring is active...</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="renderer.js"></script>
+</body>
+</html>
