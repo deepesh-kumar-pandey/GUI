@@ -17,5 +17,8 @@
   "bugs": {
     "url": "https://github.com/deepesh-kumar-pandey/GUI/issues"
   },
-  "homepage": "https://github.com/deepesh-kumar-pandey/GUI#readme"
+  "homepage": "https://github.com/deepesh-kumar-pandey/GUI#readme",
+  "devDependencies": {
+    "@electron-forge/maker-squirrel": "^7.11.1"
+  }
 }

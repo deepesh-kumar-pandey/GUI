@@ -13,7 +13,10 @@ let logWatcher;
 // Securely loaded from environment variables
 const GATEKEEPER_PATH = process.env.GATEKEEPER_PATH ? path.resolve(__dirname, process.env.GATEKEEPER_PATH) : path.resolve(__dirname, '../API-project/gatekeeper');
 const DEEPGUARD_PATH = process.env.DEEPGUARD_PATH ? path.resolve(__dirname, process.env.DEEPGUARD_PATH) : path.resolve(__dirname, '../Health-Monitoring-Service/deepguard');
-const MONITOR_KEY = process.env.MONITOR_KEY || "SecretKey123";
+const MONITOR_KEY = process.env.MONITOR_KEY;
+if (!MONITOR_KEY) {
+    console.warn("WARNING: MONITOR_KEY not set in environment variables.");
+}
 const DEEPGUARD_LOG = path.resolve(__dirname, 'alerts.log');
 
 // --- Input Validation ---
@@ -41,10 +44,10 @@ function createWindow() {
         height: 800,
         webPreferences: {
             preload: path.join(__dirname, 'preload.js'),
-            contextIsolation: true,
-            nodeIntegration: false,
-            // Security: Disable webview tag
-            webviewTag: false,
+            contextIsolation: true,  // Isolates your preload script context
+            nodeIntegration: false,  // Prevents web pages from using Node.js
+            sandbox: true,           // Runs the window in a restricted mode
+            webviewTag: false,       // Disable webview tag for security
         },
     });
 

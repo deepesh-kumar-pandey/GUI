@@ -1,4 +1,9 @@
 node_modules/
 .DS_Store
 dist/
+start/
 release/
+.env
+*.log
+npm-debug.log*
+thumbs.db
