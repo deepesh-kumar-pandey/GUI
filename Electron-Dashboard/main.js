@@ -1,7 +1,8 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
-const { spawn, exec } = require('child_process');
+const { spawn } = require('child_process');
 const fs = require('fs');
+require('dotenv').config();
 
 let mainWindow;
 let gatekeeperProcess;
@@ -9,13 +10,30 @@ let deepguardProcess;
 let logWatcher;
 
 // --- Configuration ---
-// Adjust paths to where the actual binaries are located relative to this file or absolute
-const GATEKEEPER_PATH = path.resolve(__dirname, '../API-project/gatekeeper');
-const DEEPGUARD_PATH = path.resolve(__dirname, '../Health-Monitoring-Service/deepguard');
-const DEEPGUARD_LOG = path.resolve(__dirname, 'alerts.log'); // Log file will be created in app dir
+// Securely loaded from environment variables
+const GATEKEEPER_PATH = process.env.GATEKEEPER_PATH ? path.resolve(__dirname, process.env.GATEKEEPER_PATH) : path.resolve(__dirname, '../API-project/gatekeeper');
+const DEEPGUARD_PATH = process.env.DEEPGUARD_PATH ? path.resolve(__dirname, process.env.DEEPGUARD_PATH) : path.resolve(__dirname, '../Health-Monitoring-Service/deepguard');
+const MONITOR_KEY = process.env.MONITOR_KEY || "SecretKey123";
+const DEEPGUARD_LOG = path.resolve(__dirname, 'alerts.log');
 
-// XOR Key for DeepGuard (Must match what we send to the process)
-const MONITOR_KEY = "SecretKey123";
+// --- Input Validation ---
+const VALID_COMMANDS = ['check', 'status', 'clear'];
+const MAX_INPUT_LENGTH = 50;
+const USER_ID_REGEX = /^[a-zA-Z0-9_]+$/;
+
+function validateCommand(command) {
+    if (!command || typeof command !== 'string') return false;
+    if (command.length > MAX_INPUT_LENGTH) return false;
+
+    const parts = command.trim().split(' ');
+    if (parts.length !== 2) return false;
+
+    const [cmd, user] = parts;
+    if (!VALID_COMMANDS.includes(cmd)) return false;
+    if (!USER_ID_REGEX.test(user)) return false;
+
+    return true;
+}
 
 function createWindow() {
     mainWindow = new BrowserWindow({
@@ -25,7 +43,15 @@ function createWindow() {
             preload: path.join(__dirname, 'preload.js'),
             contextIsolation: true,
             nodeIntegration: false,
+            // Security: Disable webview tag
+            webviewTag: false,
         },
+    });
+
+    // Security: Handle permissions
+    mainWindow.webContents.session.setPermissionRequestHandler((webContents, permission, callback) => {
+        // Deny all permissions by default
+        return callback(false);
     });
 
     mainWindow.loadFile('index.html');
@@ -53,11 +79,14 @@ app.on('window-all-closed', () => {
 
 // --- Gatekeeper Logic ---
 
-// We keep Gatekeeper running because it has state (memory map)
-// If it crashes or isn't started, we start it.
 function ensureGatekeeper() {
     if (!gatekeeperProcess || gatekeeperProcess.killed) {
         console.log("Spawning Gatekeeper at:", GATEKEEPER_PATH);
+        if (!fs.existsSync(GATEKEEPER_PATH)) {
+            console.error("Gatekeeper executable not found!");
+            return;
+        }
+
         gatekeeperProcess = spawn(GATEKEEPER_PATH, [], {
             cwd: path.dirname(GATEKEEPER_PATH)
         });
@@ -65,21 +94,14 @@ function ensureGatekeeper() {
         startGatekeeperDataListener();
 
         // Initial config input
-        // Based on README: Input Max Requests, then Time Window
         gatekeeperProcess.stdin.write("100\n"); // Max Requests
         gatekeeperProcess.stdin.write("60\n");  // Time Window
     }
 }
 
-// Queue to handle command-response mapping? 
-// For simplicity, we might assume sequential processing or just parse any output.
-// Since it's a CLI, the output is "User: alice...".
-// We'll just send the raw output to the renderer for now.
-
 function startGatekeeperDataListener() {
     gatekeeperProcess.stdout.on('data', (data) => {
         const output = data.toString();
-        // console.log("Gatekeeper stdout:", output);
         if (mainWindow && !mainWindow.isDestroyed()) {
             mainWindow.webContents.send('gatekeeper-output', output);
         }
@@ -91,10 +113,18 @@ function startGatekeeperDataListener() {
 }
 
 ipcMain.handle('gatekeeper-command', async (event, command) => {
+    // Security: Validate input before processing
+    if (!validateCommand(command)) {
+        console.warn(`Blocked invalid command: ${command}`);
+        return "Error: Invalid command format caught by security filter.";
+    }
+
     ensureGatekeeper();
-    // command ex: "check alice" or "status alice"
-    gatekeeperProcess.stdin.write(command + "\n");
-    return "Command sent";
+    if (gatekeeperProcess && !gatekeeperProcess.killed) {
+        gatekeeperProcess.stdin.write(command + "\n");
+        return "Command sent";
+    }
+    return "Error: Gatekeeper process not available";
 });
 
 
@@ -113,12 +143,10 @@ ipcMain.handle('deepguard-start', async () => {
 
     console.log("Spawning DeepGuard at:", DEEPGUARD_PATH);
 
-    // Check if binary exists
     if (!fs.existsSync(DEEPGUARD_PATH)) {
         return `Error: Binary not found at ${DEEPGUARD_PATH}`;
     }
 
-    // Set env var as per README
     const env = { ...process.env, MONITOR_KEY: MONITOR_KEY };
 
     deepguardProcess = spawn(DEEPGUARD_PATH, [], {
@@ -126,18 +154,15 @@ ipcMain.handle('deepguard-start', async () => {
         env: env
     });
 
-    // Handle inputs for DeepGuard
-    // Prompts: Threshold, Log File, Interval
-    // We wait a bit or just blast the inputs. 
-    // Standard input might be buffered, so writing immediately usually works.
-
-    // Input 1: Threshold (e.g., 0.5 for CPU)
-    // Input 2: Log file name (absolute path to ensure we can find it)
-    // Input 3: Check interval (seconds)
-
-    setTimeout(() => { deepguardProcess.stdin.write("0.1\n"); }, 500); // Low threshold to force alerts
-    setTimeout(() => { deepguardProcess.stdin.write(DEEPGUARD_LOG + "\n"); }, 1000);
-    setTimeout(() => { deepguardProcess.stdin.write("3\n"); }, 1500);
+    setTimeout(() => {
+        if (deepguardProcess && !deepguardProcess.killed) deepguardProcess.stdin.write("0.1\n");
+    }, 500);
+    setTimeout(() => {
+        if (deepguardProcess && !deepguardProcess.killed) deepguardProcess.stdin.write(DEEPGUARD_LOG + "\n");
+    }, 1000);
+    setTimeout(() => {
+        if (deepguardProcess && !deepguardProcess.killed) deepguardProcess.stdin.write("3\n");
+    }, 1500);
 
     deepguardProcess.stdout.on('data', (data) => {
         console.log(`DeepGuard: ${data}`);
@@ -148,7 +173,6 @@ ipcMain.handle('deepguard-start', async () => {
         console.error(`DeepGuard Error: ${data}`);
     });
 
-    // Start watching the log file
     startLogWatcher();
 
     return "Started";
@@ -169,7 +193,6 @@ ipcMain.handle('deepguard-stop', async () => {
 function startLogWatcher() {
     if (logWatcher) logWatcher.close();
 
-    // Create file if not exists
     if (!fs.existsSync(DEEPGUARD_LOG)) {
         fs.writeFileSync(DEEPGUARD_LOG, '');
     }
@@ -178,13 +201,6 @@ function startLogWatcher() {
         if (eventType === 'change') {
             fs.readFile(DEEPGUARD_LOG, 'utf8', (err, data) => {
                 if (err) return;
-                // The file might contain multiple lines.
-                // We'll just read the whole thing and decrypt.
-                // In a real app we'd tail it.
-                // DeepGuard writes binary/encrypted data? 
-                // The README says "XOR-Encrypted Logging". 
-                // So the file content is essentially just characters.
-
                 const decrypted = xorDecrypt(data, MONITOR_KEY);
                 if (mainWindow) mainWindow.webContents.send('deepguard-log', decrypted);
             });

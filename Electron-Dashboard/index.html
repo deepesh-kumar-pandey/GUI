@@ -1,7 +1,10 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline';">
     <title>System Dashboard</title>
     <style>
         :root {
@@ -41,7 +44,8 @@
             font-weight: 500;
         }
 
-        .nav-item:hover, .nav-item.active {
+        .nav-item:hover,
+        .nav-item.active {
             background-color: var(--accent-color);
             color: white;
         }
@@ -62,18 +66,30 @@
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
-        h1 { margin-top: 0; border-bottom: 2px solid var(--accent-color); padding-bottom: 10px; display: inline-block; }
-        
+        h1 {
+            margin-top: 0;
+            border-bottom: 2px solid var(--accent-color);
+            padding-bottom: 10px;
+            display: inline-block;
+        }
+
         .card {
             background-color: var(--card-bg);
             padding: 20px;
             border-radius: 10px;
             margin-bottom: 20px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
         }
 
         input[type="text"] {
@@ -93,14 +109,28 @@
             font-weight: bold;
             transition: transform 0.1s;
         }
-        
-        button:active { transform: scale(0.98); }
 
-        .btn-primary { background-color: var(--accent-color); color: white; }
-        .btn-danger { background-color: var(--danger-color); color: white; }
-        .btn-success { background-color: var(--success-color); color: white; }
+        button:active {
+            transform: scale(0.98);
+        }
 
-        #terminal-output, #log-output {
+        .btn-primary {
+            background-color: var(--accent-color);
+            color: white;
+        }
+
+        .btn-danger {
+            background-color: var(--danger-color);
+            color: white;
+        }
+
+        .btn-success {
+            background-color: var(--success-color);
+            color: white;
+        }
+
+        #terminal-output,
+        #log-output {
             background-color: #000;
             font-family: 'Consolas', 'Monaco', monospace;
             padding: 15px;
@@ -120,12 +150,21 @@
             font-weight: bold;
             text-transform: uppercase;
         }
-        
-        .status-running { background-color: rgba(0, 200, 81, 0.2); color: var(--success-color); border: 1px solid var(--success-color); }
-        .status-stopped { background-color: rgba(255, 68, 68, 0.2); color: var(--danger-color); border: 1px solid var(--danger-color); }
 
+        .status-running {
+            background-color: rgba(0, 200, 81, 0.2);
+            color: var(--success-color);
+            border: 1px solid var(--success-color);
+        }
+
+        .status-stopped {
+            background-color: rgba(255, 68, 68, 0.2);
+            color: var(--danger-color);
+            border: 1px solid var(--danger-color);
+        }
     </style>
 </head>
+
 <body>
 
     <div id="sidebar">
@@ -139,7 +178,7 @@
         <div id="gatekeeper" class="view-section active">
             <h1>Gatekeeper Rate Limiter</h1>
             <p>Administer user rate limits and check status.</p>
-            
+
             <div class="card">
                 <h3>Rate Limit Check</h3>
                 <input type="text" id="gk-user-input" placeholder="Enter User ID (e.g. alice)">
@@ -162,7 +201,7 @@
             <div class="card">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                     <div>
-                        <strong>Service Status:</strong> 
+                        <strong>Service Status:</strong>
                         <span id="dg-status-badge" class="status-badge status-stopped">Stopped</span>
                     </div>
                     <div>
@@ -182,4 +221,5 @@
 
     <script src="renderer.js"></script>
 </body>
+
 </html>

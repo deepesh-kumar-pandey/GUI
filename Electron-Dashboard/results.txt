@@ -1,0 +1,169 @@
+=== Rate Limiter Configuration ===
+Enter Max Requests allowed: Enter Time Window (in seconds): ========================================
+        Gatekeeper CLI         
+========================================
+ Storage: limiter_db.txt (encrypted)
+ Commands: check <id>, status <id>, exit
+========================================
+
+Rate Limiter System Active (10 req / 60s)
+
+--- Gatekeeper CLI Commands ---
+1. check <user_id>  - Log a request
+2. status <user_id> - View remaining hits
+3. clear <user_id>  - Reset user limits
+4. help             - Show this menu
+5. exit             - Save and quit
+-------------------------------
+
+>> [ALLOWED] Request logged for user_1 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_2 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_3 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_4 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_5 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_6 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_7 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_8 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_9 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_10 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_11 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_12 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_13 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_14 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_15 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_16 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_17 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_18 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_19 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_20 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_21 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_22 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_23 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_24 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_25 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_26 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_27 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_28 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_29 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_30 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_31 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_32 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_33 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_34 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_35 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_36 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_37 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_38 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_39 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_40 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_41 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_42 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_43 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_44 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_45 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_46 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_47 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_48 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_49 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_50 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_51 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_52 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_53 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_54 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_55 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_56 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_57 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_58 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_59 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_60 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_61 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_62 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_63 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_64 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_65 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_66 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_67 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_68 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_69 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_70 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_71 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_72 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_73 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_74 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_75 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_76 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_77 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_78 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_79 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_80 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_81 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_82 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_83 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_84 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_85 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_86 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_87 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_88 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_89 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_90 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_91 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_92 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_93 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_94 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_95 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_96 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_97 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_98 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_99 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_100 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_101 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_102 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_103 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_104 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_105 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_106 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_107 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_108 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_109 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_110 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_111 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_112 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_113 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_114 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_115 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_116 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_117 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_118 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_119 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_120 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_121 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_122 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_123 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_124 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_125 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_126 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_127 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_128 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_129 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_130 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_131 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_132 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_133 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_134 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_135 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_136 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_137 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_138 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_139 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_140 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_141 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_142 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_143 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_144 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_145 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_146 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_147 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_148 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_149 | Remaining: 8/10
+>> [ALLOWED] Request logged for user_150 | Remaining: 8/10
+>> Data saved. Goodbye!
