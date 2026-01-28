@@ -118,16 +118,22 @@ function startGatekeeperDataListener() {
 ipcMain.handle('gatekeeper-command', async (event, command) => {
     // Security: Validate input before processing
     if (!validateCommand(command)) {
-        console.warn(`Blocked invalid command: ${command}`);
-        return "Error: Invalid command format caught by security filter.";
+        const errorMsg = `Error: Invalid command format "${command}". Use <cmd> <user>.`;
+        console.warn(errorMsg);
+        return errorMsg;
     }
 
-    ensureGatekeeper();
-    if (gatekeeperProcess && !gatekeeperProcess.killed) {
-        gatekeeperProcess.stdin.write(command + "\n");
-        return "Command sent";
+    try {
+        ensureGatekeeper();
+        if (gatekeeperProcess && !gatekeeperProcess.killed) {
+            gatekeeperProcess.stdin.write(command + "\n");
+            return "Command sent";
+        }
+        return "Error: Gatekeeper process not available";
+    } catch (err) {
+        console.error("Gatekeeper error:", err);
+        return `Error: ${err.message}`;
     }
-    return "Error: Gatekeeper process not available";
 });
 
 
@@ -141,7 +147,7 @@ function xorDecrypt(data, key) {
     return result;
 }
 
-ipcMain.handle('deepguard-start', async () => {
+ipcMain.handle('deepguard-start', async (event, config) => {
     if (deepguardProcess && !deepguardProcess.killed) return "Already running";
 
     console.log("Spawning DeepGuard at:", DEEPGUARD_PATH);
@@ -150,6 +156,7 @@ ipcMain.handle('deepguard-start', async () => {
         return `Error: Binary not found at ${DEEPGUARD_PATH}`;
     }
 
+    const { cpu, interval } = config || { cpu: "0.5", interval: "5" };
     const env = { ...process.env, MONITOR_KEY: MONITOR_KEY };
 
     deepguardProcess = spawn(DEEPGUARD_PATH, [], {
@@ -158,13 +165,13 @@ ipcMain.handle('deepguard-start', async () => {
     });
 
     setTimeout(() => {
-        if (deepguardProcess && !deepguardProcess.killed) deepguardProcess.stdin.write("0.1\n");
+        if (deepguardProcess && !deepguardProcess.killed) deepguardProcess.stdin.write(cpu + "\n");
     }, 500);
     setTimeout(() => {
         if (deepguardProcess && !deepguardProcess.killed) deepguardProcess.stdin.write(DEEPGUARD_LOG + "\n");
     }, 1000);
     setTimeout(() => {
-        if (deepguardProcess && !deepguardProcess.killed) deepguardProcess.stdin.write("3\n");
+        if (deepguardProcess && !deepguardProcess.killed) deepguardProcess.stdin.write(interval + "\n");
     }, 1500);
 
     deepguardProcess.stdout.on('data', (data) => {

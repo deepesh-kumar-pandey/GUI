@@ -169,8 +169,8 @@
 
     <div id="sidebar">
         <h2 style="margin-bottom: 30px;">System Dashboard</h2>
-        <div class="nav-item active" onclick="showSection('gatekeeper')">Gatekeeper</div>
-        <div class="nav-item" onclick="showSection('deepguard')">DeepGuard</div>
+        <div id="nav-gatekeeper" class="nav-item active">Gatekeeper</div>
+        <div id="nav-deepguard" class="nav-item">DeepGuard</div>
     </div>
 
     <div id="content">
@@ -182,9 +182,9 @@
             <div class="card">
                 <h3>Rate Limit Check</h3>
                 <input type="text" id="gk-user-input" placeholder="Enter User ID (e.g. alice)">
-                <button class="btn-primary" onclick="checkUser()">Check Request</button>
-                <button class="btn-primary" onclick="checkStatus()">Check Status</button>
-                <button class="btn-danger" onclick="resetUser()">Reset User</button>
+                <button id="btn-gk-check" class="btn-primary">Check Request</button>
+                <button id="btn-gk-status" class="btn-primary">Check Status</button>
+                <button id="btn-gk-reset" class="btn-danger">Reset User</button>
             </div>
 
             <div class="card">
@@ -204,9 +204,11 @@
                         <strong>Service Status:</strong>
                         <span id="dg-status-badge" class="status-badge status-stopped">Stopped</span>
                     </div>
-                    <div>
-                        <button class="btn-success" onclick="startDeepGuard()">Start Monitoring</button>
-                        <button class="btn-danger" onclick="stopDeepGuard()">Stop</button>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <input type="text" id="dg-cpu-input" placeholder="CPU Load (e.g. 0.5)" style="width: 130px;">
+                        <input type="text" id="dg-interval-input" placeholder="Interval (sec)" style="width: 100px;">
+                        <button id="btn-dg-start" class="btn-success">Start Monitoring</button>
+                        <button id="btn-dg-stop" class="btn-danger">Stop</button>
                     </div>
                 </div>
                 <p id="dg-status-text" style="color: #888; margin-top: 10px;">Service is not running.</p>
