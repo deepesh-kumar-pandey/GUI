@@ -32,19 +32,21 @@
                 <button id="btn-gk-reset" class="btn-danger">Reset User</button>
             </div>
 
-            <div class="card" style="border: 1px solid var(--accent-color);">
+            <div class="card" style="border: 1px solid #ffbb33;">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <h3>Auto-Simulation</h3>
-                    <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-                        <input type="text" id="sim-rate-input" placeholder="Req / sec" style="width: 100px;" value="1">
-                        <input type="text" id="sim-total-input" placeholder="Total Req (e.g. 10)" style="width: 150px;">
-                        <button id="btn-sim-toggle" class="btn-success">Start Auto-Check</button>
+                    <h3>Network Auto-Detection</h3>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <input type="text" id="sniff-port-input" placeholder="Port (e.g. 80)" style="width: 120px;" value="80">
+                        <button id="btn-sniff-toggle" class="btn-primary">Start Sniffer</button>
+                        <button id="btn-mock-detect" class="btn-success">Mock Detected</button>
                     </div>
                 </div>
+
                 <p style="color: #888; margin-top: 10px; font-size: 0.9em;">
-                    Automatically sends 'check' requests for the User ID specified above at the given rate.
+                    Automatically detects incoming traffic on the specified port and tracks requests by Source IP.
                 </p>
             </div>
+
 
             <div class="card" id="analytics-card" style="display: none;">
                 <div style="display: flex; justify-content: space-between; align-items: center;">

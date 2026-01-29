@@ -22,9 +22,10 @@ const db = require('./database');
 const DEEPGUARD_LOG = path.join(__dirname, 'alerts.log');
 
 // --- Input Validation ---
-const VALID_COMMANDS = ['check', 'status', 'clear'];
+const VALID_COMMANDS = ['check', 'status', 'clear', 'sniff'];
 const MAX_INPUT_LENGTH = 50;
-const USER_ID_REGEX = /^[a-zA-Z0-9_]+$/;
+const USER_ID_REGEX = /^[a-zA-Z0-9_\.]+$/; // Allow dot for IPs
+
 
 function validateCommand(command) {
     if (!command || typeof command !== 'string') return false;

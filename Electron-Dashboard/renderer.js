@@ -128,8 +128,45 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     document.getElementById('btn-sim-toggle').addEventListener('click', toggleSimulation);
+    
+    // --- Sniffer Logic ---
+    let sniffActive = false;
+    function toggleSniff() {
+        const btn = document.getElementById('btn-sniff-toggle');
+        const port = document.getElementById('sniff-port-input').value.trim();
+        
+        if (sniffActive) {
+            // Stopping sniffer is not directly supported via a dedicated CLI command yet, 
+            // but we can just clear the UI state or rely on Gatekeeper's process kill.
+            // For now, we'll just show it as stopped in UI.
+            btn.textContent = 'Start Sniffer';
+            btn.className = 'btn-primary';
+            sniffActive = false;
+            return;
+        }
 
-    window.electronAPI.onGatekeeperOutput((output) => {
+        if (!port || isNaN(port)) {
+            alert('Please enter a valid port number');
+            return;
+        }
+
+        window.electronAPI.sendGatekeeperCommand(`sniff ${port}`).then(res => {
+            btn.textContent = 'Sniffing Port ' + port;
+            btn.className = 'btn-danger';
+            sniffActive = true;
+        });
+    }
+
+    document.getElementById('btn-sniff-toggle').addEventListener('click', toggleSniff);
+
+    document.getElementById('btn-mock-detect').addEventListener('click', () => {
+        const mockOutput = `[AUTO-DETECTED] [ALLOWED] Source: 192.168.1.${Math.floor(Math.random()*254) + 1} | Remaining: 99/100\n`;
+        handleGatekeeperOutput(mockOutput);
+    });
+
+
+    function handleGatekeeperOutput(output) {
+        if (!output) return;
         const term = document.getElementById('terminal-output');
         term.textContent += output;
         term.scrollTop = term.scrollHeight;
@@ -147,12 +184,17 @@ document.addEventListener('DOMContentLoaded', () => {
             div.style.padding = '4px 0';
             div.style.borderBottom = '1px solid #333';
             
+            if (output.includes('[AUTO-DETECTED]')) {
+                div.style.borderLeft = '4px solid #ffbb33';
+                div.style.paddingLeft = '8px';
+            }
+
             if (output.includes('[ALLOWED]')) {
                 div.style.color = '#00C851';
             } else {
                 div.style.color = '#ff4444';
             }
-            
+
             div.textContent = `[${new Date().toLocaleTimeString()}] ${output.trim()}`;
             analyticsList.prepend(div);
         }
@@ -168,7 +210,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 throttleBadge.style.display = 'none';
             }
         }
-    });
+    }
+
+    window.electronAPI.onGatekeeperOutput(handleGatekeeperOutput);
+
 
     // --- DeepGuard Functions ---
 
