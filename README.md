@@ -103,11 +103,12 @@ Visit `http://localhost:8080` in your browser. The dashboard will instantly trac
 
 Verified with **150,000 unique users**.
 
-| Component      | Metric         | Value             |
-| :------------- | :------------- | :---------------- |
-| **Gatekeeper** | **Throughput** | **280,111 req/s** |
-| Gatekeeper     | Avg Latency    | **0.0031 ms**     |
-| Gatekeeper     | Encryption     | **AES-256-CBC**   |
+| Component      | Metric          | Value             |
+| :------------- | :-------------- | :---------------- |
+| **Gatekeeper** | **Throughput**  | **280,111 req/s** |
+| Gatekeeper     | **Avg Latency** | **0.0031 ms**     |
+| Gatekeeper     | **Encryption**  | **AES-256-CBC**   |
+| **DeepGuard**  | **Encryption**  | **AES-256-CBC**   |
 
 ---
 
