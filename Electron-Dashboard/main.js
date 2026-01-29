@@ -50,7 +50,23 @@ function createWindow() {
             nodeIntegration: false,  // Prevents web pages from using Node.js
             sandbox: true,           // Runs the window in a restricted mode
             webviewTag: false,       // Disable webview tag for security
+            enableRemoteModule: false, // Explicitly disable remote module
         },
+    });
+
+    // Security: Handle navigation
+    mainWindow.webContents.on('will-navigate', (event, url) => {
+        const parsedUrl = new URL(url);
+        if (parsedUrl.origin !== 'file://') {
+            console.warn(`Blocked navigation to: ${url}`);
+            event.preventDefault();
+        }
+    });
+
+    // Security: Handle new windows (including middle-click/auxclick)
+    mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+        console.warn(`Blocked window open request to: ${url}`);
+        return { action: 'deny' };
     });
 
     // Security: Handle permissions
