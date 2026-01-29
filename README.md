@@ -3,8 +3,8 @@
 > **Ultra High-Performance Electron Dashboard interfacing with Security-Hardened C++ Microservices.**
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Platform](https://img.shields.io/badge/platform-linux-lightgrey.svg)
-![Stability](https://img.shields.io/badge/status-production--ready-success.svg)
+![Platform](https://img.shields.io/badge/platform-linux%20%7C%20windows-lightgrey.svg)
+![Stability](https://img.shields.io/badge/status-multi--platform--stable-success.svg)
 ![Security](https://img.shields.io/badge/encryption-AES--256--CBC-success.svg)
 
 ---
@@ -17,10 +17,19 @@ Follow these steps precisely to deploy the dashboard on a fresh Linux server.
 
 Ensure your OS has the necessary compilers, Node.js environment, and network libraries. We use OpenSSL for high-grade encryption.
 
+#### Linux (Ubuntu/Debian)
+
 ```bash
 sudo apt-get update
 sudo apt-get install -y g++ make libpcap-dev libssl-dev nodejs npm python3
 ```
+
+#### Windows
+
+1.  Install **MinGW-w64** (via MSYS2 or standalone).
+2.  Install **Node.js & npm**.
+3.  Install **Npcap SDK** (Mandatory for packet sniffing).
+4.  Install **OpenSSL for Windows**.
 
 ### Step 2: Set Up Security & Encryption Keys
 
@@ -57,9 +66,18 @@ cd ..
 
 The production script compiles the C++ services with OpenSSL linking and sets the required Linux Network Capabilities (`cap_net_raw`).
 
+#### Linux
+
 ```bash
 chmod +x setup_production.sh
 ./setup_production.sh
+```
+
+#### Windows (PowerShell)
+
+```powershell
+Set-ExecutionPolicy RemoteSigned -Scope Process
+.\setup_production.ps1
 ```
 
 ### Step 4: Deploy as a Background Service (Optional)

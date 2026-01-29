@@ -11,14 +11,22 @@ let gatekeeperProcess;
 let deepguardProcess;
 let logWatcher;
 
-// --- Configuration ---
-// Securely loaded from environment variables
-const GATEKEEPER_PATH = process.env.GATEKEEPER_PATH ? path.resolve(__dirname, process.env.GATEKEEPER_PATH) : path.resolve(__dirname, '../API-project/gatekeeper');
-const DEEPGUARD_PATH = process.env.DEEPGUARD_PATH ? path.resolve(__dirname, process.env.DEEPGUARD_PATH) : path.resolve(__dirname, '../Health-Monitoring-Service/deepguard');
+// Helper to handle Windows .exe extension
+function getExecutablePath(basePath) {
+    if (process.platform === 'win32' && !basePath.toLowerCase().endsWith('.exe')) {
+        const exePath = basePath + '.exe';
+        if (fs.existsSync(exePath)) return exePath;
+    }
+    return basePath;
+}
+
+const GATEKEEPER_PATH = getExecutablePath(process.env.GATEKEEPER_PATH ? path.resolve(__dirname, process.env.GATEKEEPER_PATH) : path.resolve(__dirname, '../API-project/gatekeeper'));
+const DEEPGUARD_PATH = getExecutablePath(process.env.DEEPGUARD_PATH ? path.resolve(__dirname, process.env.DEEPGUARD_PATH) : path.resolve(__dirname, '../Health-Monitoring-Service/deepguard'));
 const MONITOR_KEY = process.env.MONITOR_KEY;
 if (!MONITOR_KEY) {
     console.warn("WARNING: MONITOR_KEY not set in environment variables.");
 }
+
 const db = require('./database');
 
 const DEEPGUARD_LOG = path.join(__dirname, 'alerts.log');
