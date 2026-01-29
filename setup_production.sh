@@ -30,7 +30,7 @@ echo "✅ Capabilities set."
 # 4. Install Dashboard Dependencies
 echo "📦 Installing Dashboard Dependencies..."
 cd ../Electron-Dashboard
-npm install --production
+npm install
 echo "✅ Dashboard dependencies installed."
 
 echo "===================================================="
