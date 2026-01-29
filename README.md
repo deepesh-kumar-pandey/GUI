@@ -8,80 +8,82 @@
 
 ---
 
-## 🛠️ Complete Production Setup (From Scratch)
+## ⚡ Quick Start: Setup from Scratch
 
-Follow these steps precisely to deploy the dashboard on a fresh Linux server.
+Follow these exact steps to get the entire system running on a clean Linux environment.
 
-### Step 1: Install System Requirements
+### 1. Install System Dependencies (C++ & Networking)
 
-Ensure your OS has the necessary compilers, Node.js environment, and network libraries.
+First, ensure your system has the required build tools and the packet capture library:
 
 ```bash
 sudo apt-get update
 sudo apt-get install -y g++ make libpcap-dev nodejs npm python3
 ```
 
-### Step 2: Set Up Security & Encryption Keys
+### 2. Configure Environment Secrets
 
-The system requires two unique keys for data protection. You **must** generate these before starting.
-
-#### 1. Generate Secure Keys
-
-Run these commands to generate random 32-character hex strings:
-
-```bash
-# Generate a key for Gatekeeper flow encryption
-openssl rand -hex 16
-# Generate a key for DeepGuard log encryption
-openssl rand -hex 16
-```
-
-#### 2. Create the Configuration File
-
-Create a `.env` file in the `Electron-Dashboard` directory and paste your generated keys:
+Create a `.env` file inside the `Electron-Dashboard` directory. This is mandatory for the system to boot securely.
 
 ```bash
 cd Electron-Dashboard
 cat <<EOF > .env
-# Mandatory Security Keys
-GATEKEEPER_KEY=your_generated_gatekeeper_key_here
-MONITOR_KEY=your_generated_monitor_key_here
-
 # Backend Binary Paths
 GATEKEEPER_PATH=../API-project/gatekeeper
 DEEPGUARD_PATH=../Health-Monitoring-Service/deepguard
+
+# Security Keys (Set these to strong, random strings)
+MONITOR_KEY=YourSecureMonitorKey_ChangeMe
+GATEKEEPER_KEY=YourSecureGatekeeperKey_ChangeMe
 EOF
 cd ..
 ```
 
-### Step 3: Run the Automated Build
+### 3. Run the Automated Production Setup
 
-The production script compiles the C++ services and sets the required Linux Network Capabilities (`cap_net_raw`) so you don't have to run the app as root.
+This single script will compile the C++ microservices, set granular network permissions (`setcap`), and install the Electron dashboard dependencies.
 
 ```bash
 chmod +x setup_production.sh
 ./setup_production.sh
 ```
 
-### Step 4: Deploy as a Background Service (Optional)
+### 4. Launch the Dashboard
 
-To keep the dashboard running even if you log out, use the provided systemd service:
+Finally, start the Electron dashboard. Note: Because we used `setcap` in the previous step, you do **NOT** need to run this as root!
 
 ```bash
-# 1. Edit the service file to match your absolute paths
-# 2. Copy to systemd
-sudo cp dashboard.service /etc/systemd/system/dashboard.service
-# 3. Enable and Start
-sudo systemctl daemon-reload
-sudo systemctl enable dashboard
-sudo systemctl start dashboard
+cd Electron-Dashboard
+npm start
 ```
 
 ---
 
-## 🚀 Performance Benchmarks (at Scale)
+## 🏗️ Architecture
 
-Verified with **150,000 unique users**.
+The application implements a secure, cross-process architecture designed for microsecond-latency request validation and real-time system monitoring.
+
+```mermaid
+graph TD
+    A[Electron Main Process] -->|Secure IPC| B[Electron Renderer];
+    A -->|stdin/stdout| C[Gatekeeper C++ Service];
+    A -->|stdin/stdout| D[DeepGuard C++ Service];
+    C -->|pcap_loop| F[Network Traffic];
+    D -->|Write| E[Encrypted Log File];
+    A -->|fs.watch| E;
+```
+
+---
+
+## 🔒 Security & Performance
+
+### Hardening
+
+- **Network Capabilities**: Instead of running as `root`, we use `cap_net_raw` for packet sniffing.
+- **Fail-Fast Keys**: Backend services refuse to start without valid environment keys.
+- **Encrypted Persistence**: All logged metrics and user states are XOR-encrypted at rest.
+
+### Benchmark (150k Users)
 
 | Component      | Metric         | Value             |
 | :------------- | :------------- | :---------------- |
@@ -91,30 +93,19 @@ Verified with **150,000 unique users**.
 
 ---
 
-## 🏗️ Technical Architecture
+## 📡 Testing Features
 
-- **Gatekeeper (C++)**: High-speed request validator using `libpcap` for zero-overhead packet sniffing.
-- **DeepGuard (C++)**: Real-time system health monitor with encrypted alerting.
-- **Electron (JS)**: Advanced dashboard for visualization and live analytics.
+### Live Traffic Demo
 
----
+To simulate real-world traffic and see the dashboard track unique IPs in real-time:
 
-## 📡 Verification & Testing
-
-### Live User Tracking
-
-To see the system automatically detect and track unique users:
-
-1. Launch the Dashboard: `cd Electron-Dashboard && npm start`
+1. Start the Dashboard.
 2. Click **"Start Sniffer"** on port 80.
-3. Run the mock traffic generator:
-   ```bash
-   python3 API-project/live_traffic_demo.py 80
-   ```
+3. Run: `python3 API-project/live_traffic_demo.py 80`
 
-### Manual Benchmarking
+### Performance Stress Test
 
-To re-run the 150k user stress test:
+To run the automated benchmark suite yourself:
 
 ```bash
 cd Electron-Dashboard
