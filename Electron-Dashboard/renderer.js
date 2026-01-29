@@ -197,7 +197,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
             div.textContent = `[${new Date().toLocaleTimeString()}] ${output.trim()}`;
             analyticsList.prepend(div);
+
+            // Limit list to 50 items for performance during high-traffic demos
+            if (analyticsList.children.length > 50) {
+                analyticsList.removeChild(analyticsList.lastChild);
+            }
         }
+
 
         if (output.includes('Global Throttle Multiplier set to')) {
             analyticsCard.style.display = 'block';
