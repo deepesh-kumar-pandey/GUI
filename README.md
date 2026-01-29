@@ -2,7 +2,7 @@
 
 > **Ultra High-Performance Electron Dashboard interfacing with Security-Hardened C++ Microservices.**
 
-![License](https://img.shields.io/badge/license-ISC-blue.svg)
+![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Platform](https://img.shields.io/badge/platform-linux-lightgrey.svg)
 ![Stability](https://img.shields.io/badge/status-production--ready-success.svg)
 ![Security](https://img.shields.io/badge/encryption-AES--256--CBC-success.svg)
@@ -114,4 +114,6 @@ Verified with **150,000 unique users**.
 
 ## 📄 License
 
-ISC - High Performance, AES-Secure, and Scalable.
+This project is licensed under the MIT License - see the [LICENSE.txt](LICENSE.txt) file for details.
+
+Copyright (c) 2026 Deepesh Kumar Pandey.
