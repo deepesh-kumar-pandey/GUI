@@ -1,0 +1,23 @@
+[Unit]
+Description=Specialized Dashboard Service
+After=network.target
+
+[Service]
+# Set the user who will run the dashboard
+User=root
+WorkingDirectory=/home/GUI/Electron-Dashboard
+
+# Critical Environment Variables
+# Load environment variables from .env file instead of hardcoding
+EnvironmentFile=/home/GUI/Electron-Dashboard/.env
+Environment=DISPLAY=:0
+
+# Execute command
+ExecStart=/usr/bin/npm start
+
+# Restart policy for production stability
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

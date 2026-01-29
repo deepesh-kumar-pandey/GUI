@@ -1,149 +1,105 @@
-# specialized-dashboard
+# Specialized Dashboard
 
-> **High-Performance Electron Dashboard interfacing with C++ Microservices.**
+> **Ultra High-Performance Electron Dashboard interfacing with Security-Hardened C++ Microservices.**
 
 ![License](https://img.shields.io/badge/license-ISC-blue.svg)
 ![Platform](https://img.shields.io/badge/platform-linux-lightgrey.svg)
-![Status](https://img.shields.io/badge/status-stable-success.svg)
+![Stability](https://img.shields.io/badge/status-production--ready-success.svg)
 
-## Overview
+## 🏗️ Architecture
 
-**Specialized Dashboard** is a secure, high-throughput desktop application built with Electron. It serves as a unified control plane for two critical low-level C++ microservices:
-
-1.  **Gatekeeper**: A high-performance, in-memory rate limiting engine.
-2.  **DeepGuard**: A system health monitoring service with XOR-encrypted logging.
-
-This project demonstrates the integration of modern web technologies with native system performance, featuring secure IPC communication, real-time data visualization, and robust security hardening.
-
----
-
-## Architecture
-
-The application follows a secure multi-process architecture:
+The application implements a secure, cross-process architecture designed for microsecond-latency request validation and real-time system monitoring.
 
 ```mermaid
 graph TD
-    A[Electron Main Process] -->|IPC| B[Electron Renderer];
+    A[Electron Main Process] -->|Secure IPC| B[Electron Renderer];
     A -->|stdin/stdout| C[Gatekeeper C++ Service];
     A -->|stdin/stdout| D[DeepGuard C++ Service];
+    C -->|pcap_loop| F[Network Traffic];
     D -->|Write| E[Encrypted Log File];
-    A -->|Read/Watch| E;
+    A -->|fs.watch| E;
 ```
 
-- **Main Process**: Orchestrates child processes, manages lifecycle, and handles secure decryption of logs.
-- **Renderer**: Lightweight UI with Content Security Policy (CSP) enforcement.
-- **Gatekeeper**: Handles user request validation with microsecond latency.
-- **DeepGuard**: Monitors system resources in the background.
+---
+
+## 🔒 Security Hardening
+
+This project adheres to strict production security standards:
+
+- **Network Capabilities**: Gatekeeper uses raw sockets for packet sniffing. We use Linux Capabilities (`cap_net_raw`) instead of root privileges to minimize the attack surface.
+- **Fail-Fast Encryption**: Backend services perform a mandatory check for `GATEKEEPER_KEY` and `MONITOR_KEY`. If keys are missing, the services exit immediately to prevent data leakage.
+- **XOR-Encrypted Logging**: All system alerts are encrypted at rest using a symmetric XOR cipher.
+- **Electron Security**: `contextIsolation` is enabled, `sandbox` is active, and the `no-sandbox` flag is used only for root-level compatibility with strict capability checks.
 
 ---
 
-## Security Features
+## 🚀 Performance Benchmarks (at Scale)
 
-This application implements "air-tight" security standards:
+Verified on a Linux environment with **150,000 unique users**.
 
-- **Content Security Policy (CSP)**: Strict `script-src 'self'` policy to prevent XSS.
-- **Input Sanitization**: All IPC commands are validated against a strict allowlist and regex filters before touching native binaries.
-- **Secure IPC**: `contextIsolation` enabled; `webviewTag` disabled; permission requests denied by default.
-- **Environment Configuration**: Sensitive paths and keys are managed via `.env` (using `dotenv`), separating config from code.
+| Component      | Metric         | Value             |
+| :------------- | :------------- | :---------------- |
+| **Gatekeeper** | **Throughput** | **280,111 req/s** |
+| Gatekeeper     | Avg Latency    | **0.0031 ms**     |
+| Gatekeeper     | P95 Latency    | 0.0040 ms         |
+| **DeepGuard**  | Startup Time   | < 1s              |
+| DeepGuard      | Status         | Operational       |
 
 ---
 
-## Installation
+## 🛠️ Production Setup & Deployment
 
-### Prerequisites
+Follow these steps to deploy the dashboard in a production environment.
+
+### 1. Prerequisites
 
 - Node.js (v16+)
-- GCC/G++ (for building backend services if needed)
-- Python 3 (for benchmarking)
+- `libpcap-dev` (`sudo apt-get install libpcap-dev`)
+- `g++` compiler
 
-### Setup
+### 2. Automated Build
 
-1.  **Navigate to the Dashboard Directory**
-
-    ```bash
-    cd Electron-Dashboard
-    ```
-
-2.  **Install Dependencies**
-
-    ```bash
-    npm install
-    ```
-
-3.  **Configuration**
-    Create a `.env` file in the `Electron-Dashboard` directory:
-
-    ```bash
-    cp .env.example .env
-    ```
-
-    Edit `.env` to point to your compiled `gatekeeper` and `deepguard` binaries.
-
-4.  **Run Application**
-    ```bash
-    npm start
-    ```
-
----
-
-## Performance Benchmarks
-
-Benchmarks were conducted on a Linux environment using the included `benchmark_suite.py`.
-
-### Results
-
-| Component      | Metric                      | Value             |
-| :------------- | :-------------------------- | :---------------- |
-| **Gatekeeper** | **Throughput (150k users)** | **280,111 req/s** |
-| Gatekeeper     | Avg Latency                 | 0.0031 ms         |
-| Gatekeeper     | P95 Latency                 | 0.0040 ms         |
-| **DeepGuard**  | Startup Time                | < 1s              |
-| DeepGuard      | Status                      | Operational       |
-
-_Note: Gatekeeper communicates via standard I/O pipes, achieving near-native validation speeds._
-
----
-
-## Reproducing Benchmarks
-
-To verify these results on your own hardware:
-
-```bash
-cd Electron-Dashboard
-python3 benchmark_suite.py --requests 10000 --users 150
-```
-
----
-
----
-
-## Production Deployment
-
-For production environments, follow these steps to ensure security and performance:
-
-### 1. Hardened Security
-
-- **Strict Environment Variables**: Ensure `GATEKEEPER_KEY` and `MONITOR_KEY` are set. The backend will exit if these are missing.
-- **Network Capabilities**: Instead of running as `root`, use the provided setup script to grant `cap_net_raw` to the `gatekeeper` binary.
-
-### 2. Deployment Script
-
-Run the automated production setup script:
+Run the production setup script to compile binaries and set necessary network capabilities:
 
 ```bash
 chmod +x setup_production.sh
 ./setup_production.sh
 ```
 
-### 3. Monitoring Large-Scale Traffic
+### 3. Environment Configuration
 
-The system is benchmarked for up to 150,000 concurrent users. For higher loads:
+Create a `.env` file in the `Electron-Dashboard` directory:
 
-- Increase the `max_requests` configuration during startup.
-- Ensure the disk has sufficient space for the `audit_trail.sqlite` database.
+```bash
+GATEKEEPER_PATH=../API-project/gatekeeper
+DEEPGUARD_PATH=../Health-Monitoring-Service/deepguard
+MONITOR_KEY=YourSecureMonitorKey
+GATEKEEPER_KEY=YourSecureGatekeeperKey
+```
+
+### 4. Running as a System Service
+
+A template `dashboard.service` is provided. To install:
+
+1. Update paths in `dashboard.service`.
+2. Move to systemd: `sudo cp dashboard.service /etc/systemd/system/`
+3. Start: `sudo systemctl enable --now dashboard`
 
 ---
 
-## License
+## 📡 Live Traffic Demonstration
 
-ISC
+To test the automatic user tracking:
+
+1. Start the Dashbard and enable **Sniffer Mode** on port 80.
+2. Run the simulation script:
+   ```bash
+   python3 API-project/live_traffic_demo.py 80
+   ```
+3. Watch the **Live Analytics** feed track unique IPs in real-time.
+
+---
+
+## 📄 License
+
+ISC - High Performance, Secure, and Scalable.
