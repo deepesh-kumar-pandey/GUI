@@ -11,14 +11,16 @@ echo "🛠️ Starting Production Build..."
 # 1. Build Gatekeeper
 echo "📦 Building Gatekeeper..."
 cd API-project
-g++ -I./include src/main.cpp src/Rate_limiter.cpp src/TrafficSniffer.cpp -o gatekeeper -lpcap -lpthread
+g++ -I./include src/main.cpp src/Rate_limiter.cpp src/TrafficSniffer.cpp -o gatekeeper -lpcap -lpthread -lssl -lcrypto
 echo "✅ Gatekeeper built."
+
 
 # 2. Build DeepGuard
 echo "📦 Building DeepGuard..."
 cd ../Health-Monitoring-Service
-g++ -I./include src/main.cpp src/Monitor.cpp src/Config.cpp -o deepguard -lpthread
+g++ -I./include src/main.cpp src/Monitor.cpp src/Config.cpp -o deepguard -lpthread -lssl -lcrypto
 echo "✅ DeepGuard built."
+
 
 # 3. Set Network Capabilities
 # This allows Gatekeeper to sniff traffic without running the whole app as root.

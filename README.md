@@ -5,115 +5,112 @@
 ![License](https://img.shields.io/badge/license-ISC-blue.svg)
 ![Platform](https://img.shields.io/badge/platform-linux-lightgrey.svg)
 ![Stability](https://img.shields.io/badge/status-production--ready-success.svg)
+![Security](https://img.shields.io/badge/encryption-AES--256--CBC-success.svg)
 
 ---
 
-## ⚡ Quick Start: Setup from Scratch
+## 🛠️ Complete Production Setup (From Scratch)
 
-Follow these exact steps to get the entire system running on a clean Linux environment.
+Follow these steps precisely to deploy the dashboard on a fresh Linux server.
 
-### 1. Install System Dependencies (C++ & Networking)
+### Step 1: Install System Requirements
 
-First, ensure your system has the required build tools and the packet capture library:
+Ensure your OS has the necessary compilers, Node.js environment, and network libraries. We use OpenSSL for high-grade encryption.
 
 ```bash
 sudo apt-get update
-sudo apt-get install -y g++ make libpcap-dev nodejs npm python3
+sudo apt-get install -y g++ make libpcap-dev libssl-dev nodejs npm python3
 ```
 
-### 2. Configure Environment Secrets
+### Step 2: Set Up Security & Encryption Keys
 
-Create a `.env` file inside the `Electron-Dashboard` directory. This is mandatory for the system to boot securely.
+XOR encryption has been **removed** and replaced with **Industry-Standard AES-256-CBC** for all data storage and logs.
+
+#### 1. Generate Secure Keys
+
+Run these commands to generate random keys. The system uses SHA-256 to derive a 256-bit AES key from your string for maximum security.
+
+```bash
+# Generate a random secure key
+openssl rand -hex 32
+```
+
+#### 2. Create the Configuration File
+
+Create a `.env` file in the `Electron-Dashboard` directory and paste your generated keys:
 
 ```bash
 cd Electron-Dashboard
 cat <<EOF > .env
+# Mandatory AES-256 Security Keys
+GATEKEEPER_KEY=your_generated_secure_key_here
+MONITOR_KEY=your_generated_secure_key_here
+
 # Backend Binary Paths
 GATEKEEPER_PATH=../API-project/gatekeeper
 DEEPGUARD_PATH=../Health-Monitoring-Service/deepguard
-
-# Security Keys (Set these to strong, random strings)
-MONITOR_KEY=YourSecureMonitorKey_ChangeMe
-GATEKEEPER_KEY=YourSecureGatekeeperKey_ChangeMe
 EOF
 cd ..
 ```
 
-### 3. Run the Automated Production Setup
+### Step 3: Run the Automated Build
 
-This single script will compile the C++ microservices, set granular network permissions (`setcap`), and install the Electron dashboard dependencies.
+The production script compiles the C++ services with OpenSSL linking and sets the required Linux Network Capabilities (`cap_net_raw`).
 
 ```bash
 chmod +x setup_production.sh
 ./setup_production.sh
 ```
 
-### 4. Launch the Dashboard
-
-Finally, start the Electron dashboard. Note: Because we used `setcap` in the previous step, you do **NOT** need to run this as root!
+### Step 4: Deploy as a Background Service (Optional)
 
 ```bash
-cd Electron-Dashboard
-npm start
+# Move the service file to systemd
+sudo cp dashboard.service /etc/systemd/system/dashboard.service
+sudo systemctl daemon-reload
+sudo systemctl enable dashboard
+sudo systemctl start dashboard
 ```
 
 ---
 
-## 🏗️ Architecture
+## 🏗️ Real-World Project Integration
 
-The application implements a secure, cross-process architecture designed for microsecond-latency request validation and real-time system monitoring.
+Monitor **any** real-life project (Express.js, Flask, Nginx) without changing a single line of its code.
 
-```mermaid
-graph TD
-    A[Electron Main Process] -->|Secure IPC| B[Electron Renderer];
-    A -->|stdin/stdout| C[Gatekeeper C++ Service];
-    A -->|stdin/stdout| D[DeepGuard C++ Service];
-    C -->|pcap_loop| F[Network Traffic];
-    D -->|Write| E[Encrypted Log File];
-    A -->|fs.watch| E;
+### 1. Launch Your Real Project
+
+Run your existing web application on any port (e.g., 8080).
+
+```bash
+python3 API-project/real_world_app.py 8080
 ```
+
+### 2. Configure the Dashboard
+
+1. Open the **Specialized Dashboard**.
+2. Go to the **Gatekeeper** tab.
+3. Enter `8080` in the Port input.
+4. Click **"Start Sniffer"**.
+
+### 3. Generate Real Traffic
+
+Visit `http://localhost:8080` in your browser. The dashboard will instantly track the requests using AES-encrypted data storage.
 
 ---
 
-## 🔒 Security & Performance
+## 🚀 Performance Benchmarks (at Scale)
 
-### Hardening
-
-- **Network Capabilities**: Instead of running as `root`, we use `cap_net_raw` for packet sniffing.
-- **Fail-Fast Keys**: Backend services refuse to start without valid environment keys.
-- **Encrypted Persistence**: All logged metrics and user states are XOR-encrypted at rest.
-
-### Benchmark (150k Users)
+Verified with **150,000 unique users**.
 
 | Component      | Metric         | Value             |
 | :------------- | :------------- | :---------------- |
 | **Gatekeeper** | **Throughput** | **280,111 req/s** |
 | Gatekeeper     | Avg Latency    | **0.0031 ms**     |
-| Gatekeeper     | P95 Latency    | 0.0040 ms         |
-
----
-
-## 📡 Testing Features
-
-### Live Traffic Demo
-
-To simulate real-world traffic and see the dashboard track unique IPs in real-time:
-
-1. Start the Dashboard.
-2. Click **"Start Sniffer"** on port 80.
-3. Run: `python3 API-project/live_traffic_demo.py 80`
-
-### Performance Stress Test
-
-To run the automated benchmark suite yourself:
-
-```bash
-cd Electron-Dashboard
-python3 benchmark_suite.py --requests 150000 --users 150000
-```
+| Gatekeeper     | Encryption     | **AES-256-CBC**   |
 
 ---
 
 ## 📄 License
 
-ISC - High Performance, Secure, and Scalable.
+ISC - High Performance, AES-Secure, and Scalable.

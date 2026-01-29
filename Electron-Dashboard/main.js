@@ -2,6 +2,8 @@ const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const { spawn } = require('child_process');
 const fs = require('fs');
+const crypto = require('crypto');
+
 require('dotenv').config();
 
 let mainWindow;
@@ -193,16 +195,28 @@ ipcMain.handle('gatekeeper-command', async (event, command) => {
 
 // --- DeepGuard Logic ---
 
-function xorDecrypt(data, key) {
-    let result = "";
-    for (let i = 0; i < data.length; i++) {
-        // Handle potential undefined if data is shorter than expected
-        const charCode = data.charCodeAt(i);
-        if (isNaN(charCode)) continue;
-        result += String.fromCharCode(charCode ^ key.charCodeAt(i % key.length));
+function aesDecrypt(hexData, secret) {
+    try {
+        if (!hexData || !secret) return "";
+        const binaryData = Buffer.from(hexData, 'hex');
+        if (binaryData.length < 16) return "";
+
+        const iv = binaryData.slice(0, 16);
+        const encrypted = binaryData.slice(16);
+        
+        const key = crypto.createHash('sha256').update(secret).digest();
+        const decipher = crypto.createDecipheriv('aes-256-cbc', key, iv);
+        
+        let decrypted = decipher.update(encrypted);
+        decrypted = Buffer.concat([decrypted, decipher.final()]);
+        
+        return decrypted.toString();
+    } catch (e) {
+        // Silent fail for malformed log lines
+        return "";
     }
-    return result;
 }
+
 
 function showNotification(title, message) {
     const { Notification } = require('electron');
@@ -294,7 +308,8 @@ function startLogWatcher() {
                 lines.forEach((line, index) => {
                     if (line.trim().length === 0) return;
                     
-                    const decryptedLine = xorDecrypt(line, MONITOR_KEY);
+                    const decryptedLine = aesDecrypt(line.trim(), MONITOR_KEY);
+
                     decryptedContent += decryptedLine + "\n";
                     
                     // Only notify for NEW lines that contain CRITICAL or WARNING
