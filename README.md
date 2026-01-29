@@ -6,6 +6,59 @@
 ![Platform](https://img.shields.io/badge/platform-linux-lightgrey.svg)
 ![Stability](https://img.shields.io/badge/status-production--ready-success.svg)
 
+---
+
+## ⚡ Quick Start: Setup from Scratch
+
+Follow these exact steps to get the entire system running on a clean Linux environment.
+
+### 1. Install System Dependencies (C++ & Networking)
+
+First, ensure your system has the required build tools and the packet capture library:
+
+```bash
+sudo apt-get update
+sudo apt-get install -y g++ make libpcap-dev nodejs npm python3
+```
+
+### 2. Configure Environment Secrets
+
+Create a `.env` file inside the `Electron-Dashboard` directory. This is mandatory for the system to boot securely.
+
+```bash
+cd Electron-Dashboard
+cat <<EOF > .env
+# Backend Binary Paths
+GATEKEEPER_PATH=../API-project/gatekeeper
+DEEPGUARD_PATH=../Health-Monitoring-Service/deepguard
+
+# Security Keys (Set these to strong, random strings)
+MONITOR_KEY=YourSecureMonitorKey_ChangeMe
+GATEKEEPER_KEY=YourSecureGatekeeperKey_ChangeMe
+EOF
+cd ..
+```
+
+### 3. Run the Automated Production Setup
+
+This single script will compile the C++ microservices, set granular network permissions (`setcap`), and install the Electron dashboard dependencies.
+
+```bash
+chmod +x setup_production.sh
+./setup_production.sh
+```
+
+### 4. Launch the Dashboard
+
+Finally, start the Electron dashboard. Note: Because we used `setcap` in the previous step, you do **NOT** need to run this as root!
+
+```bash
+cd Electron-Dashboard
+npm start
+```
+
+---
+
 ## 🏗️ Architecture
 
 The application implements a secure, cross-process architecture designed for microsecond-latency request validation and real-time system monitoring.
@@ -22,81 +75,42 @@ graph TD
 
 ---
 
-## 🔒 Security Hardening
+## 🔒 Security & Performance
 
-This project adheres to strict production security standards:
+### Hardening
 
-- **Network Capabilities**: Gatekeeper uses raw sockets for packet sniffing. We use Linux Capabilities (`cap_net_raw`) instead of root privileges to minimize the attack surface.
-- **Fail-Fast Encryption**: Backend services perform a mandatory check for `GATEKEEPER_KEY` and `MONITOR_KEY`. If keys are missing, the services exit immediately to prevent data leakage.
-- **XOR-Encrypted Logging**: All system alerts are encrypted at rest using a symmetric XOR cipher.
-- **Electron Security**: `contextIsolation` is enabled, `sandbox` is active, and the `no-sandbox` flag is used only for root-level compatibility with strict capability checks.
+- **Network Capabilities**: Instead of running as `root`, we use `cap_net_raw` for packet sniffing.
+- **Fail-Fast Keys**: Backend services refuse to start without valid environment keys.
+- **Encrypted Persistence**: All logged metrics and user states are XOR-encrypted at rest.
 
----
-
-## 🚀 Performance Benchmarks (at Scale)
-
-Verified on a Linux environment with **150,000 unique users**.
+### Benchmark (150k Users)
 
 | Component      | Metric         | Value             |
 | :------------- | :------------- | :---------------- |
 | **Gatekeeper** | **Throughput** | **280,111 req/s** |
 | Gatekeeper     | Avg Latency    | **0.0031 ms**     |
 | Gatekeeper     | P95 Latency    | 0.0040 ms         |
-| **DeepGuard**  | Startup Time   | < 1s              |
-| DeepGuard      | Status         | Operational       |
 
 ---
 
-## 🛠️ Production Setup & Deployment
+## 📡 Testing Features
 
-Follow these steps to deploy the dashboard in a production environment.
+### Live Traffic Demo
 
-### 1. Prerequisites
+To simulate real-world traffic and see the dashboard track unique IPs in real-time:
 
-- Node.js (v16+)
-- `libpcap-dev` (`sudo apt-get install libpcap-dev`)
-- `g++` compiler
+1. Start the Dashboard.
+2. Click **"Start Sniffer"** on port 80.
+3. Run: `python3 API-project/live_traffic_demo.py 80`
 
-### 2. Automated Build
+### Performance Stress Test
 
-Run the production setup script to compile binaries and set necessary network capabilities:
-
-```bash
-chmod +x setup_production.sh
-./setup_production.sh
-```
-
-### 3. Environment Configuration
-
-Create a `.env` file in the `Electron-Dashboard` directory:
+To run the automated benchmark suite yourself:
 
 ```bash
-GATEKEEPER_PATH=../API-project/gatekeeper
-DEEPGUARD_PATH=../Health-Monitoring-Service/deepguard
-MONITOR_KEY=YourSecureMonitorKey
-GATEKEEPER_KEY=YourSecureGatekeeperKey
+cd Electron-Dashboard
+python3 benchmark_suite.py --requests 150000 --users 150000
 ```
-
-### 4. Running as a System Service
-
-A template `dashboard.service` is provided. To install:
-
-1. Update paths in `dashboard.service`.
-2. Move to systemd: `sudo cp dashboard.service /etc/systemd/system/`
-3. Start: `sudo systemctl enable --now dashboard`
-
----
-
-## 📡 Live Traffic Demonstration
-
-To test the automatic user tracking:
-
-1. Start the Dashbard and enable **Sniffer Mode** on port 80.
-2. Run the simulation script:
-   ```bash
-   python3 API-project/live_traffic_demo.py 80
-   ```
-3. Watch the **Live Analytics** feed track unique IPs in real-time.
 
 ---
 
