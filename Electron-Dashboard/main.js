@@ -17,7 +17,9 @@ const MONITOR_KEY = process.env.MONITOR_KEY;
 if (!MONITOR_KEY) {
     console.warn("WARNING: MONITOR_KEY not set in environment variables.");
 }
-const DEEPGUARD_LOG = path.resolve(__dirname, 'alerts.log');
+const db = require('./database');
+
+const DEEPGUARD_LOG = path.join(__dirname, 'alerts.log');
 
 // --- Input Validation ---
 const VALID_COMMANDS = ['check', 'status', 'clear'];
@@ -108,12 +110,54 @@ function startGatekeeperDataListener() {
         if (mainWindow && !mainWindow.isDestroyed()) {
             mainWindow.webContents.send('gatekeeper-output', output);
         }
+
+        // --- DB LOGGING FOR GATEKEEPER ---
+        if (output.includes('[ALLOWED]') || output.includes('[DENIED]')) {
+            try {
+                // Parsing logic: "[ALLOWED] Request logged for user1 | Remaining: 9/10"
+                const status = output.includes('[ALLOWED]') ? 'ALLOWED' : 'DENIED';
+                const userMatch = output.match(/for\s+([^\s|]+)/);
+                const remainingMatch = output.match(/Remaining:\s+(\d+)/);
+                
+                if (userMatch) {
+                    db.logGatekeeper(
+                        userMatch[1], 
+                        status, 
+                        remainingMatch ? parseInt(remainingMatch[1]) : null
+                    );
+                }
+            } catch (e) {
+                console.error("Failed to log gatekeeper to DB:", e);
+            }
+        }
     });
 
     gatekeeperProcess.stderr.on('data', (data) => {
         console.error("Gatekeeper stderr:", data.toString());
     });
 }
+
+function sendGatekeeperCmd(command) {
+    try {
+        ensureGatekeeper();
+        if (gatekeeperProcess && !gatekeeperProcess.killed) {
+            gatekeeperProcess.stdin.write(command + "\n");
+            return true;
+        }
+    } catch (err) {
+        console.error("Gatekeeper error:", err);
+    }
+    return false;
+}
+
+// --- IPC Handlers for Database ---
+ipcMain.handle('get-alerts', async () => {
+    return await db.getAlerts();
+});
+
+ipcMain.handle('get-gatekeeper-logs', async () => {
+    return await db.getGatekeeperLogs();
+});
 
 ipcMain.handle('gatekeeper-command', async (event, command) => {
     // Security: Validate input before processing
@@ -123,17 +167,10 @@ ipcMain.handle('gatekeeper-command', async (event, command) => {
         return errorMsg;
     }
 
-    try {
-        ensureGatekeeper();
-        if (gatekeeperProcess && !gatekeeperProcess.killed) {
-            gatekeeperProcess.stdin.write(command + "\n");
-            return "Command sent";
-        }
-        return "Error: Gatekeeper process not available";
-    } catch (err) {
-        console.error("Gatekeeper error:", err);
-        return `Error: ${err.message}`;
+    if (sendGatekeeperCmd(command)) {
+        return "Command sent";
     }
+    return "Error: Gatekeeper process not available";
 });
 
 
@@ -142,9 +179,24 @@ ipcMain.handle('gatekeeper-command', async (event, command) => {
 function xorDecrypt(data, key) {
     let result = "";
     for (let i = 0; i < data.length; i++) {
-        result += String.fromCharCode(data.charCodeAt(i) ^ key.charCodeAt(i % key.length));
+        // Handle potential undefined if data is shorter than expected
+        const charCode = data.charCodeAt(i);
+        if (isNaN(charCode)) continue;
+        result += String.fromCharCode(charCode ^ key.charCodeAt(i % key.length));
     }
     return result;
+}
+
+function showNotification(title, message) {
+    const { Notification } = require('electron');
+    if (Notification.isSupported()) {
+        const notif = new Notification({
+            title: title,
+            body: message,
+            silent: false
+        });
+        notif.show();
+    }
 }
 
 ipcMain.handle('deepguard-start', async (event, config) => {
@@ -156,7 +208,7 @@ ipcMain.handle('deepguard-start', async (event, config) => {
         return `Error: Binary not found at ${DEEPGUARD_PATH}`;
     }
 
-    const { cpu, interval } = config || { cpu: "0.5", interval: "5" };
+    const { cpu, ram, interval } = config || { cpu: "0.5", ram: "80.0", interval: "5" };
     const env = { ...process.env, MONITOR_KEY: MONITOR_KEY };
 
     deepguardProcess = spawn(DEEPGUARD_PATH, [], {
@@ -168,11 +220,14 @@ ipcMain.handle('deepguard-start', async (event, config) => {
         if (deepguardProcess && !deepguardProcess.killed) deepguardProcess.stdin.write(cpu + "\n");
     }, 500);
     setTimeout(() => {
-        if (deepguardProcess && !deepguardProcess.killed) deepguardProcess.stdin.write(DEEPGUARD_LOG + "\n");
+        if (deepguardProcess && !deepguardProcess.killed) deepguardProcess.stdin.write(ram + "\n");
     }, 1000);
     setTimeout(() => {
-        if (deepguardProcess && !deepguardProcess.killed) deepguardProcess.stdin.write(interval + "\n");
+        if (deepguardProcess && !deepguardProcess.killed) deepguardProcess.stdin.write(DEEPGUARD_LOG + "\n");
     }, 1500);
+    setTimeout(() => {
+        if (deepguardProcess && !deepguardProcess.killed) deepguardProcess.stdin.write(interval + "\n");
+    }, 2000);
 
     deepguardProcess.stdout.on('data', (data) => {
         console.log(`DeepGuard: ${data}`);
@@ -200,8 +255,11 @@ ipcMain.handle('deepguard-stop', async () => {
     return "Stopped";
 });
 
+let lastProcessedLineCount = 0;
+
 function startLogWatcher() {
     if (logWatcher) logWatcher.close();
+    lastProcessedLineCount = 0;
 
     if (!fs.existsSync(DEEPGUARD_LOG)) {
         fs.writeFileSync(DEEPGUARD_LOG, '');
@@ -211,8 +269,42 @@ function startLogWatcher() {
         if (eventType === 'change') {
             fs.readFile(DEEPGUARD_LOG, 'utf8', (err, data) => {
                 if (err) return;
-                const decrypted = xorDecrypt(data, MONITOR_KEY);
-                if (mainWindow) mainWindow.webContents.send('deepguard-log', decrypted);
+                
+                // C++ appends encrypted lines separated by raw \n
+                const lines = data.split('\n');
+                let decryptedContent = "";
+                
+                lines.forEach((line, index) => {
+                    if (line.trim().length === 0) return;
+                    
+                    const decryptedLine = xorDecrypt(line, MONITOR_KEY);
+                    decryptedContent += decryptedLine + "\n";
+                    
+                    // Only notify for NEW lines that contain CRITICAL or WARNING
+                    if (index >= lastProcessedLineCount) {
+                        if (decryptedLine.includes("CRITICAL") || decryptedLine.includes("WARNING")) {
+                            showNotification("DeepGuard Alert", decryptedLine);
+                            
+                            // --- DB LOGGING FOR ALERTS ---
+                            const level = decryptedLine.includes("CRITICAL") ? "CRITICAL" : "WARNING";
+                            db.logAlert(level, decryptedLine);
+
+                            // --- ADAPTIVE THROTTLING ---
+                            // If load/RAM is critical, throttle Gatekeeper to 20% capacity
+                            if (decryptedLine.includes("Load") || decryptedLine.includes("RAM")) {
+                                console.log("Adaptive Throttling: Reducing Gatekeeper capacity to 20%");
+                                sendGatekeeperCmd("throttle 0.2");
+                            }
+                        }
+                        // Recovery logic (simple check for "System OK")
+                        if (decryptedLine.includes("System OK")) {
+                            sendGatekeeperCmd("throttle 1.0");
+                        }
+                    }
+                });
+                
+                lastProcessedLineCount = lines.length;
+                if (mainWindow) mainWindow.webContents.send('deepguard-log', decryptedContent);
             });
         }
     });

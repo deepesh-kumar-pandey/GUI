@@ -169,13 +169,14 @@
 
     <div id="sidebar">
         <h2 style="margin-bottom: 30px;">System Dashboard</h2>
-        <div id="nav-gatekeeper" class="nav-item active">Gatekeeper</div>
-        <div id="nav-deepguard" class="nav-item">DeepGuard</div>
+        <div class="nav-item active" data-tab="gatekeeper-tab" id="nav-gatekeeper">Gatekeeper</div>
+        <div class="nav-item" data-tab="history-tab" id="nav-history">History</div>
+        <div class="nav-item" data-tab="deepguard-tab" id="nav-deepguard">DeepGuard</div>
     </div>
 
     <div id="content">
         <!-- Gatekeeper View -->
-        <div id="gatekeeper" class="view-section active">
+        <div id="gatekeeper-tab" class="view-section active">
             <h1>Gatekeeper Rate Limiter</h1>
             <p>Administer user rate limits and check status.</p>
 
@@ -187,14 +188,61 @@
                 <button id="btn-gk-reset" class="btn-danger">Reset User</button>
             </div>
 
+            <div class="card" style="border: 1px solid var(--accent-color);">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h3>Auto-Simulation</h3>
+                    <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                        <input type="text" id="sim-rate-input" placeholder="Req / sec" style="width: 100px;" value="1">
+                        <input type="text" id="sim-total-input" placeholder="Total Req (e.g. 10)" style="width: 150px;">
+                        <button id="btn-sim-toggle" class="btn-success">Start Auto-Check</button>
+                    </div>
+                </div>
+                <p style="color: #888; margin-top: 10px; font-size: 0.9em;">
+                    Automatically sends 'check' requests for the User ID specified above at the given rate.
+                </p>
+            </div>
+
+            <div class="card" id="analytics-card" style="display: none;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h3>Live Analytics</h3>
+                    <span id="throttle-badge" class="status-badge" style="display: none;">Throttling Active</span>
+                </div>
+                <div id="analytics-list" style="max-height: 200px; overflow-y: auto; font-family: monospace; font-size: 0.9em; border: 1px solid #444; padding: 10px; border-radius: 5px; background: #222;">
+                    Waiting for activity...
+                </div>
+            </div>
+
             <div class="card">
                 <h3>Live Terminal Output</h3>
                 <div id="terminal-output">Waiting for gatekeeper process...</div>
             </div>
         </div>
 
+        <!-- History Tab -->
+        <div id="history-tab" class="tab-content" style="display: none;">
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h3>Persistent Audit Trail</h3>
+                    <button id="btn-refresh-history" class="btn-primary" style="padding: 5px 15px;">Refresh</button>
+                </div>
+                <p style="color: #888; font-size: 0.9em; margin-bottom: 20px;">
+                    Data below is pulled from the SQLite database.
+                </p>
+
+                <h4>System Alerts Archive</h4>
+                <div id="history-alerts" style="max-height: 250px; overflow-y: auto; font-family: monospace; background: #222; border: 1px solid #444; border-radius: 5px; padding: 10px; margin-bottom: 20px;">
+                    Loading alerts...
+                </div>
+
+                <h4>Gatekeeper Request History</h4>
+                <div id="history-gatekeeper" style="max-height: 250px; overflow-y: auto; font-family: monospace; background: #222; border: 1px solid #444; border-radius: 5px; padding: 10px;">
+                    Loading logs...
+                </div>
+            </div>
+        </div>
+
         <!-- DeepGuard View -->
-        <div id="deepguard" class="view-section">
+        <div id="deepguard-tab" class="view-section" style="display: none;">
             <h1>DeepGuard Monitor</h1>
             <p>Real-time system health monitoring and encrypted logging.</p>
 
@@ -204,8 +252,9 @@
                         <strong>Service Status:</strong>
                         <span id="dg-status-badge" class="status-badge status-stopped">Stopped</span>
                     </div>
-                    <div style="display: flex; gap: 10px; align-items: center;">
+                    <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
                         <input type="text" id="dg-cpu-input" placeholder="CPU Load (e.g. 0.5)" style="width: 130px;">
+                        <input type="text" id="dg-ram-input" placeholder="RAM % (e.g. 80.0)" style="width: 130px;">
                         <input type="text" id="dg-interval-input" placeholder="Interval (sec)" style="width: 100px;">
                         <button id="btn-dg-start" class="btn-success">Start Monitoring</button>
                         <button id="btn-dg-stop" class="btn-danger">Stop</button>
