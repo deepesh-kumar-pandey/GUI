@@ -1,0 +1,9 @@
+{
+  "input": ".",
+  "exclude": [
+    "**/build/**",
+    "**/node_modules/**",
+    "**/CMakeFiles/**",
+    "**/*.log"
+  ]
+}

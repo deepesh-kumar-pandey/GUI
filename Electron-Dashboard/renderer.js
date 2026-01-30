@@ -127,7 +127,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }, intervalMs);
     }
 
-    document.getElementById('btn-sim-toggle').addEventListener('click', toggleSimulation);
+    const simToggleBtn = document.getElementById('btn-sim-toggle');
+    if (simToggleBtn) simToggleBtn.addEventListener('click', toggleSimulation);
     
     // --- Sniffer Logic ---
     let sniffActive = false;
@@ -224,17 +225,20 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- DeepGuard Functions ---
 
     function startDeepGuard() {
-        const cpu = document.getElementById('dg-cpu-input').value.trim();
+        const cpuPercent = document.getElementById('dg-cpu-input').value.trim();
         const ram = document.getElementById('dg-ram-input').value.trim();
         const interval = document.getElementById('dg-interval-input').value.trim();
         
-        if (!cpu || !ram || !interval) {
+        if (!cpuPercent || !ram || !interval) {
             alert('Please enter CPU Load, RAM Threshold and Check Interval');
             return;
         }
 
+        // Convert CPU percentage (e.g., 20) to decimal (e.g., 0.2) for DeepGuard
+        const cpuDecimal = (parseFloat(cpuPercent) / 100).toFixed(2);
+
         document.getElementById('dg-status-badge').textContent = 'STARTING...';
-        window.electronAPI.startDeepGuard({ cpu, ram, interval }).then(res => {
+        window.electronAPI.startDeepGuard({ cpu: cpuDecimal, ram, interval }).then(res => {
             if (res.startsWith('Error')) {
                 document.getElementById('dg-status-badge').className = 'status-badge status-stopped';
                 document.getElementById('dg-status-badge').textContent = 'STOPPED';

@@ -62,6 +62,10 @@ function createWindow() {
             sandbox: true,           // Runs the window in a restricted mode
             webviewTag: false,       // Disable webview tag for security
             enableRemoteModule: false, // Explicitly disable remote module
+            allowRunningInsecureContent: false, // Block mixed content
+            experimentalFeatures: false, // Disable experimental Chromium features
+            webSecurity: true,       // Enforce same-origin policy
+            navigateOnDragDrop: false, // Prevent drag-drop navigation attacks
         },
     });
 
@@ -75,9 +79,16 @@ function createWindow() {
     });
 
     // Security: Handle new windows (including middle-click/auxclick)
+    // This blocks ALL new window requests from any source including auxclick
     mainWindow.webContents.setWindowOpenHandler(({ url }) => {
         console.warn(`Blocked window open request to: ${url}`);
         return { action: 'deny' };
+    });
+
+    // Security: Block webview attachment attempts
+    mainWindow.webContents.on('did-attach-webview', (event, webContents) => {
+        console.warn('Blocked webview attachment attempt');
+        event.preventDefault();
     });
 
     // Security: Handle permissions
@@ -220,8 +231,8 @@ function aesDecrypt(hexData, secret) {
         
         return decrypted.toString();
     } catch (e) {
-        // Silent fail for malformed log lines
-        return "";
+        console.error("AES Decryption Error:", e.message);
+        return `[Decryption Error: ${e.message}]`;
     }
 }
 
@@ -265,7 +276,11 @@ ipcMain.handle('deepguard-start', async (event, config) => {
         if (deepguardProcess && !deepguardProcess.killed) deepguardProcess.stdin.write(DEEPGUARD_LOG + "\n");
     }, 1500);
     setTimeout(() => {
-        if (deepguardProcess && !deepguardProcess.killed) deepguardProcess.stdin.write(interval + "\n");
+        if (deepguardProcess && !deepguardProcess.killed) {
+            deepguardProcess.stdin.write(interval + "\n");
+            console.log("DeepGuard configuration sequence complete.");
+            startLogWatcher();
+        }
     }, 2000);
 
     deepguardProcess.stdout.on('data', (data) => {
@@ -277,8 +292,6 @@ ipcMain.handle('deepguard-start', async (event, config) => {
         console.error(`DeepGuard Error: ${data}`);
     });
 
-    startLogWatcher();
-
     return "Started";
 });
 
@@ -288,7 +301,7 @@ ipcMain.handle('deepguard-stop', async () => {
         deepguardProcess = null;
     }
     if (logWatcher) {
-        logWatcher.close();
+        fs.unwatchFile(DEEPGUARD_LOG);
         logWatcher = null;
     }
     return "Stopped";
@@ -297,46 +310,36 @@ ipcMain.handle('deepguard-stop', async () => {
 let lastProcessedLineCount = 0;
 
 function startLogWatcher() {
-    if (logWatcher) logWatcher.close();
+    if (logWatcher) fs.unwatchFile(DEEPGUARD_LOG);
+    logWatcher = true; // Use true just to mark as active
     lastProcessedLineCount = 0;
 
-    if (!fs.existsSync(DEEPGUARD_LOG)) {
-        fs.writeFileSync(DEEPGUARD_LOG, '');
-    }
-
-    logWatcher = fs.watch(DEEPGUARD_LOG, (eventType, filename) => {
-        if (eventType === 'change') {
+    // Use watchFile (polling) instead of watch for better reliability on some Linux/Docker setups
+    fs.watchFile(DEEPGUARD_LOG, { interval: 1000 }, (curr, prev) => {
+        if (curr.mtime > prev.mtime) {
             fs.readFile(DEEPGUARD_LOG, 'utf8', (err, data) => {
                 if (err) return;
                 
-                // C++ appends encrypted lines separated by raw \n
-                const lines = data.split('\n');
+                // Split lines and filter out empty ones to be precise
+                const lines = data.split('\n').map(l => l.trim()).filter(l => l.length > 0);
                 let decryptedContent = "";
                 
                 lines.forEach((line, index) => {
-                    if (line.trim().length === 0) return;
-                    
-                    const decryptedLine = aesDecrypt(line.trim(), MONITOR_KEY);
-
+                    const decryptedLine = aesDecrypt(line, MONITOR_KEY);
                     decryptedContent += decryptedLine + "\n";
                     
-                    // Only notify for NEW lines that contain CRITICAL or WARNING
                     if (index >= lastProcessedLineCount) {
                         if (decryptedLine.includes("CRITICAL") || decryptedLine.includes("WARNING")) {
                             showNotification("DeepGuard Alert", decryptedLine);
                             
-                            // --- DB LOGGING FOR ALERTS ---
                             const level = decryptedLine.includes("CRITICAL") ? "CRITICAL" : "WARNING";
                             db.logAlert(level, decryptedLine);
 
-                            // --- ADAPTIVE THROTTLING ---
-                            // If load/RAM is critical, throttle Gatekeeper to 20% capacity
                             if (decryptedLine.includes("Load") || decryptedLine.includes("RAM")) {
                                 console.log("Adaptive Throttling: Reducing Gatekeeper capacity to 20%");
                                 sendGatekeeperCmd("throttle 0.2");
                             }
                         }
-                        // Recovery logic (simple check for "System OK")
                         if (decryptedLine.includes("System OK")) {
                             sendGatekeeperCmd("throttle 1.0");
                         }

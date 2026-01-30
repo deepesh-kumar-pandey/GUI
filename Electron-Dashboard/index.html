@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="Content-Security-Policy"
-        content="default-src 'self'; script-src 'self'; style-src 'self';">
+        content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; object-src 'none'; frame-src 'none'; base-uri 'self'; form-action 'self';">
     <title>System Dashboard</title>
     <link rel="stylesheet" href="index.css">
 </head>
@@ -99,7 +99,7 @@
                         <span id="dg-status-badge" class="status-badge status-stopped">Stopped</span>
                     </div>
                     <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-                        <input type="text" id="dg-cpu-input" placeholder="CPU Load (e.g. 0.5)" style="width: 130px;">
+                        <input type="text" id="dg-cpu-input" placeholder="CPU Load % (e.g. 20)" style="width: 130px;">
                         <input type="text" id="dg-ram-input" placeholder="RAM % (e.g. 80.0)" style="width: 130px;">
                         <input type="text" id="dg-interval-input" placeholder="Interval (sec)" style="width: 100px;">
                         <button id="btn-dg-start" class="btn-success">Start Monitoring</button>
