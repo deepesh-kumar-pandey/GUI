@@ -1,7 +1,8 @@
 {
   "name": "electron-dashboard",
   "version": "1.0.0",
-  "description": "",
+  "description": "System Dashboard for monitoring and rate limiting",
+  "productName": "System Dashboard",
   "main": "main.js",
   "scripts": {
     "start": "electron . --no-sandbox",
@@ -11,9 +12,16 @@
   },
   "build": {
     "appId": "com.electron.dashboard",
+    "directories": {
+      "output": "release"
+    },
     "win": {
       "target": "nsis"
     },
+    "extraResources": [
+      "bin/**",
+      ".env"
+    ],
     "files": [
       "!**/*.py",
       "!**/*.sh",

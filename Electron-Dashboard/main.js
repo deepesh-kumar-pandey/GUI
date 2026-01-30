@@ -20,16 +20,31 @@ function getExecutablePath(basePath) {
     return basePath;
 }
 
-const GATEKEEPER_PATH = getExecutablePath(process.env.GATEKEEPER_PATH ? path.resolve(__dirname, process.env.GATEKEEPER_PATH) : path.resolve(__dirname, '../API-project/gatekeeper'));
-const DEEPGUARD_PATH = getExecutablePath(process.env.DEEPGUARD_PATH ? path.resolve(__dirname, process.env.DEEPGUARD_PATH) : path.resolve(__dirname, '../Health-Monitoring-Service/deepguard'));
+const isPackaged = app.isPackaged;
+const resourcesPath = isPackaged ? process.resourcesPath : __dirname;
+
+const GATEKEEPER_PATH = getExecutablePath(
+    process.env.GATEKEEPER_PATH ? 
+    path.resolve(__dirname, process.env.GATEKEEPER_PATH) : 
+    (isPackaged ? path.join(resourcesPath, 'bin', 'gatekeeper') : path.resolve(__dirname, '../API-project/gatekeeper'))
+);
+
+const DEEPGUARD_PATH = getExecutablePath(
+    process.env.DEEPGUARD_PATH ? 
+    path.resolve(__dirname, process.env.DEEPGUARD_PATH) : 
+    (isPackaged ? path.join(resourcesPath, 'bin', 'deepguard') : path.resolve(__dirname, '../Health-Monitoring-Service/deepguard'))
+);
+
+const DEEPGUARD_LOG = path.join(app.getPath('userData'), 'alerts.log');
+const dbPath = path.join(app.getPath('userData'), 'audit_trail.sqlite');
+
 const MONITOR_KEY = process.env.MONITOR_KEY;
 if (!MONITOR_KEY) {
     console.warn("WARNING: MONITOR_KEY not set in environment variables.");
 }
 
+process.env.DB_PATH = dbPath;
 const db = require('./database');
-
-const DEEPGUARD_LOG = path.join(__dirname, 'alerts.log');
 
 // --- Input Validation ---
 const VALID_COMMANDS = ['check', 'status', 'clear', 'sniff'];
